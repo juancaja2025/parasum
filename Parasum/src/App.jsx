@@ -202,7 +202,7 @@ const SKUForm = ({ initialSku, onSave, onCancel }) => {
             id="sku"
             value={formData.sku}
             onChange={handleChange}
-            icon={Barcode}
+            icon={ScanLine}
             error={errors.sku}
           />
 
@@ -397,7 +397,7 @@ export default function App() {
           onClick={() => setView('form')}
           className="w-full bg-gradient-to-r from-brand-primary to-brand-dark text-white py-8 rounded-[24px] shadow-xl flex items-center justify-center gap-4 active:scale-95 transition-all mb-8"
         >
-          <Barcode size={32} />
+          <ScanLine size={32} />
           <div className="text-left">
             <p className="text-xl font-bold">Nuevo Registro</p>
             <p className="text-xs opacity-80 font-normal">Escaneo o Manual</p>
