@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import {
-  Camera, Box, Barcode, List, ChevronRight, CheckCircle,
-  AlertCircle, X, Keyboard, Layers, Truck, Loader2
+  Box, Barcode, ChevronRight, AlertCircle,
+  Layers, Truck, Loader2
 } from 'lucide-react';
 
 // ─── CONFIGURACIÓN DE SUPABASE ───────────────────────────────────────────────
