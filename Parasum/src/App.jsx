@@ -382,11 +382,11 @@ export default function App() {
       <main className="px-4 py-6 max-w-md mx-auto">
         {/* Estado de depósitos */}
         <div className="grid grid-cols-2 gap-4 mb-8">
-          <Card className="bg-brand-dark text-white border-none shadow-lg">
+          <Card className="!bg-[#056572] text-white border-none shadow-lg">
             <span className="text-[9px] uppercase font-bold opacity-70">Depósito PL2</span>
             <p className="text-2xl font-bold">Activo</p>
           </Card>
-          <Card className="bg-brand-primary text-white border-none shadow-lg">
+          <Card className="!bg-[#0099A8] text-white border-none shadow-lg">
             <span className="text-[9px] uppercase font-bold opacity-70">Depósito PL3</span>
             <p className="text-2xl font-bold">Activo</p>
           </Card>
