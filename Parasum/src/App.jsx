@@ -2,8 +2,174 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import {
   Box, ScanLine, ChevronRight, AlertCircle,
-  Layers, Truck, Loader2, Camera, X, Keyboard
+  Layers, Truck, Loader2, Camera, X
 } from 'lucide-react';
+
+// ─── LISTADO DE SKUs POR NAVE ─────────────────────────────────────────────────
+const SKU_POR_NAVE = {
+  PL3: [
+    { codigo: '9143A42K', descripcion: 'TV 43" Hisense FHD A42K' },
+    { codigo: '9143UR8750PSA', descripcion: 'TV HISENSE 50" UHD 4K A6N' },
+    { codigo: '9150A64N', descripcion: 'TV HISENSE 55" QLED Q6N' },
+    { codigo: '9150C350NS', descripcion: 'TV HISENSE 65" QLED Q6N' },
+    { codigo: '9150Q6N', descripcion: 'Smart TV LG 70" Ultra HD AI ThinQ 70UR8750PSA' },
+    { codigo: '9155Q6N', descripcion: 'SMART TV 75" TOSHIBA - VIDAA TV' },
+    { codigo: '9165Q6N', descripcion: 'AIRE ACOND. HISENSE SPLIT 2500W FRIO CALOR CL. A (U.E.)' },
+    { codigo: '9175NANO80TSA', descripcion: 'AIRE ACOND. HISENSE SPLIT INVERTER BLACK 3300W FRIO CALOR CL. A (U.E.)' },
+    { codigo: '9186NANO80TSA', descripcion: 'AIRE ACOND. HISENSE SPLIT 5000W FRIO CALOR CL. A (U.E.)' },
+    { codigo: '91AS09HR4SYRKG00E', descripcion: 'AIRE ACOND. HISENSE SPLIT INVERTER BLACK 5500W FRIO CALOR CL. A++ (U.E.)' },
+    { codigo: '91AS09HR4SYRKG00I', descripcion: 'AIRE ACOND. HISENSE SPLIT 6300W FRIO CALOR CL. A (U.E.)' },
+    { codigo: '91AS12HR4SVRKG03PX4E', descripcion: 'AIRE ACOND. HISENSE SPLIT 8000W FRIO CALOR CL. A (U.E.)' },
+    { codigo: '91AS12HR4SVRKG03PX4I', descripcion: 'ASADERA GENÉRICA' },
+    { codigo: '91AS12UR4SVRCA02BKNE', descripcion: 'AIRE ACOND. NOBLEX SPLIT INVERTER 3550W FRIO CALOR CL. A++ (U.E.)' },
+    { codigo: '91AS12UR4SVRCA02BKNI', descripcion: 'PAVA ELECTRICA CON CORTE SANSEI' },
+    { codigo: '91AS18HR4SXSKG00PX4E', descripcion: 'SMART TV 40" PHILCO - VIDAA' },
+    { codigo: '91AS18HR4SXSKG00PX4I', descripcion: 'AIRE ACOND. LG SPLIT INVERTER WIFI 3,5 KW FRIO CALOR (U.I.)' },
+    { codigo: '91AS18UR4SXSCA00BKNE', descripcion: 'AIRE ACOND. LG SPLIT INVERTER WIFI 5 KW FRIO CALOR (U.I.)' },
+    { codigo: '91AS18UR4SXSCA00BKNI', descripcion: 'AIRE ACOND. LG SPLIT INVERTER WIFI 6 KW FRIO CALOR (U.I.)' },
+    { codigo: '91AS18UR4SXSCD00PX4E', descripcion: 'FREIDORA DE AIRE CON VISOR NEGRA 6 LITROS' },
+    { codigo: '91AS18UR4SXSCD00PX4I', descripcion: 'Freezer Vertical SIAM 65 litros FSI-CV065B' },
+    { codigo: '91AS22HR4SXTKG00E', descripcion: 'Generador Electrico 2500W' },
+    { codigo: '91AS22HR4SXTKG00I', descripcion: 'Horno grill 70 litros' },
+    { codigo: '91ASGEN2', descripcion: 'HORNO DE PAN ATMA NEGRO' },
+    { codigo: '91DB55X3500', descripcion: 'HELADERA BAJO MESADA 123 LITROS ( NEGRA)' },
+    { codigo: '91DR32X7080', descripcion: 'LAVAVAJILLA HISENSE INOX 14 CUBIERTOS' },
+    { codigo: '91DR55X8580', descripcion: 'Juguera negra PHILCO' },
+    { codigo: '91DR55X8800', descripcion: 'LAVAVAJILLAS 5 CUBIERTOS - ATMA - NEGRO' },
+    { codigo: '91DV32X7080', descripcion: 'microondas Atma Digital C/ grill Black 23 Membrana' },
+    { codigo: '91DV50X8580', descripcion: 'BICICLETA MTB ACERO 29 FIERCE F210 21VEL GRIS TALLE 18' },
+    { codigo: '91DV65X8580', descripcion: 'MOPA CENTRIFUGA CON RUEDAS Y PEDAL PROLINE' },
+    { codigo: '91DV75X8580', descripcion: 'Microondas Philco Digital blanco 20 lts' },
+    { codigo: '91NXIN35HA3BNE', descripcion: 'CALEFÓN PHILCO 14/L MIN - BLANCO - TIRO FORZADO - TECNOLOGÍA PILOTLESS' },
+    { codigo: '91NXIN35HA3BNI', descripcion: 'Cava termoeléctrica 12 botellas PHILCO PHCAV012N' },
+    { codigo: '91NXS32HA4CNE', descripcion: 'AIRE ACOND. PHILCO SPLIT INVERTER 8750 FRIO CALOR CL. A (U.E.) // CON WIFI' },
+    { codigo: '91NXS32HA4CNI', descripcion: 'LAVARROPA CARGA FRONTAL INVERTER 11KG 1400 RPM PHILCO PHLF1114BI' },
+    { codigo: '91NXS50HA4CNE', descripcion: 'Lavarropas carga frontal 6,5kg PHILCO - Blanco PHLF6510B2' },
+    { codigo: '91NXS50HA4CNI', descripcion: 'TORRE DE LAVADO CARGA FRONTAL LAVARROPAS + LAVASECARROPA PHILCO DARK GRAY' },
+    { codigo: '91PHBKS26HA6ANE', descripcion: 'HELADERA TOP MOUNT NO FROST 267L BRUTO CON DISPENSER PHILCO - PHNT267XD2' },
+    { codigo: '91PHBKS26HA6ANI', descripcion: 'HELADERA SIDE BY SIDE 428L NETA NEGRA PHILCO - PHSB450N' },
+    { codigo: '91PHBKS34HA6ANE', descripcion: 'HELADERA SBS CROSSDOOR 385L NETOS CON DISPENSER + INVERTER INOX PHILCO - PHSB470XD2' },
+    { codigo: '91PHBKS34HA6ANI', descripcion: 'HELADERA SINGLE DOOR 161 LITROS CON DISPENSER PHILCO PHSD179BD2 BLANCO' },
+    { codigo: '91PHIN35HA3BNE', descripcion: 'termotanque eléctrico 2000w 30 litros blanco' },
+    { codigo: '91PHIN35HA3BNI', descripcion: 'termotanque eléctrico philco 2000w blanco 50 litros' },
+    { codigo: '91PHS32HA4CNE', descripcion: 'termotanque eléctrico philco 1500w blanco 80 litros' },
+    { codigo: '91PHS50HA4CNE', descripcion: 'HELADERA SINGLE DOOR HISENSE BLANCA 179 L' },
+    { codigo: '91PHS50HA4CNI', descripcion: 'HELADERA HISENSE TOP MOUNT NO FROST INOX INVERTER DISPENSER 375L' },
+    { codigo: '91PHS60HA4CNE', descripcion: 'INODORO SMART SANSEI MIZU BLANCO' },
+    { codigo: '91PHS60HA4CNI', descripcion: 'AIRE ACOND. SIAM PISO TECHO 6TR FRIO CALOR (U.E.)' },
+    { codigo: '91PHW25CA3AN', descripcion: 'VENTILADOR DE TECHO 56"' },
+    { codigo: '91PHW32CA3AN', descripcion: 'Tostadora Blanca ATMA' },
+    { codigo: '91PLD40HS24', descripcion: 'TORRE DE SONIDO PHILCO' },
+    { codigo: '91PLD50US25GH', descripcion: 'Sistema de Audio Vertical' },
+    { codigo: '91PLD55US25GH', descripcion: 'Termotanque eléctrico SIAM 35lts TSI-TS035BM BLANCO' },
+    { codigo: '91PLD55US25VH', descripcion: 'Termotanque eléctrico SIAM 65lts TSI-TS065BM BLANCO' },
+    { codigo: '91S4NW12JA31A', descripcion: 'LAVARROPAS INVERTER LG BLANCO WM10WVC4S6 CON AI DD y THINQ 10KG 1400 RPM' },
+    { codigo: '91S4NW12JARPA', descripcion: 'ZRAY KAYAK 1 PERSONA' },
+    { codigo: '91S4NW18KL31A', descripcion: 'INDOOR UNIT MULTIV CASSETTE 4 WAY 36 KBTU' },
+    { codigo: '91S4NW18KLRPA', descripcion: 'CAFETERA DE FILTRO 0,6 L' },
+    { codigo: '91S4NW24K231E', descripcion: 'FREEZER HORIZONTAL HISENSE 297L' },
+    { codigo: '91S4NW24K2RPE', descripcion: 'CAJA ORGANIZADORA ATMA HOME' },
+    { codigo: '91S4UW12JA31A', descripcion: 'Parlante Portátil Bluetooth Full Led' },
+    { codigo: '91S4UW12JARPA', descripcion: 'Freezer Vertical SIAM 181 litros FSI-CV181B' },
+    { codigo: '91S4UW18KL31A', descripcion: 'FREEZER VERTICAL HISENSE BLANCO 82L' },
+    { codigo: '91S4UW18KLRPA', descripcion: 'GUANTE DE BOXEO 10 OZ ROJO' },
+    { codigo: '91S4UW24K231E', descripcion: 'GUANTE DE BOXEO 12 OZ ROJO' },
+    { codigo: '91S4UW24K2RPE', descripcion: 'GUANTE ARTES MARCIALES TALLE M NEGRO' },
+    { codigo: '91SAS25HA4CNE', descripcion: 'VENDA DE BOXEO 4 METROS NEGRO' },
+    { codigo: '91SAS25HA4CNI', descripcion: 'ALETA DE NATACION ROSA 36-37' },
+    { codigo: '91TDS2550UIGH', descripcion: 'HORNO GRILL AIR FRYER ATMA 17 LITROS' },
+    { codigo: '91WBJ12B', descripcion: 'HELADERA BAJO MESADA 83L PLATA SIAM - HSI-BM093P2' },
+    { codigo: '91WBM12B', descripcion: 'HELADERA BAJO MESADA 50L CORAL - SIAM RETRO HSI-BM50BR2' },
+    { codigo: '9250A64N', descripcion: 'Exhibidora vertical SIAM 65 litros HSI-EV065B2' },
+    { codigo: '92AS12UR4SVRCA02BKNE', descripcion: 'LAVAVAJILLAS 15 CUBIERTOS INOX' },
+    { codigo: '92AS12UR4SVRCA02BKNI', descripcion: 'Microondas Philco Digital blanco 23 lts' },
+    { codigo: '92AS18UR4SXSCA00BKNE', descripcion: 'Soporte Movil Marca Philco Serie G' },
+    { codigo: '92AS18UR4SXSCA00BKNI', descripcion: 'Cava termoeléctrica de vinos 28 Botellas PHILCO PHCAV028N' },
+    { codigo: '92AS18UR4SXSCD00PX4E', descripcion: 'Cava eléctrica con compresor 52 Botellas PHILCO PHCAV052N' },
+    { codigo: '92AS18UR4SXSCD00PX4I', descripcion: 'FREEZER POZO BLANCO PHILCO - PHCH144B' },
+    { codigo: '92AS22HR4SXTKG00E', descripcion: 'Freezer de pozo 400 L PHCH410BM' },
+    { codigo: '92AS22HR4SXTKG00I', descripcion: 'Freezer de pozo 520 L PHCH535BM' },
+    { codigo: '92FR246AWP', descripcion: 'PILETA ESTRUCTURAL REDONDA PLUS CON PATRÓN RATÁN 6765 L' },
+    { codigo: '92FR259PHP', descripcion: 'HELADERA COMBI NO FROST 339 L INOX PHILCO - PHNC382XT' },
+    { codigo: '92FR60MAWP', descripcion: 'AIRE ACONDICIONADO PHILCO PORTATIL 2650 W F/C' },
+    { codigo: '92FR901DP', descripcion: 'AIRE ACONDICIONADO PHILCO PORTATIL 3500 W F/C' },
+    { codigo: '92HFR582DP', descripcion: 'HELADERA HISENSE TOP MOUNT NO FROST INVERTER INOX 320L' },
+    { codigo: '92HGFAB1725PI', descripcion: 'Lavasecarropa Hisense Carga Frontal 10/6kg Inverter' },
+    { codigo: '92PHCA14B', descripcion: 'CAVA TERMOELECTRICA 8 BOTELLAS PHILCO - PHCAV08N2' },
+    { codigo: '92PHCS07B', descripcion: 'HELADERA COMBI NO FROST INVERTER 374L INOX PHILCO - PHNC417XI' },
+    { codigo: '92PHCS10B', descripcion: 'HELADERA SIDE BY SIDE 450L INOX - PHSB450X' },
+    { codigo: '92PHCT225B', descripcion: 'Heladera SBS Hisense Black Glass 564 litros' },
+    { codigo: '92PHCT242X', descripcion: 'Heladera Cross Door Hisense Inverter + Smart Screen 640 litros' },
+    { codigo: '92PHCV065B', descripcion: 'Freezer Vertical Hisense Plata 169 litros' },
+    { codigo: '92PHIN35HA3BNE', descripcion: 'HELADERA HISENSE TOP MOUNT NO FROST INVERTER INOX DISPENSER 461L' },
+  ],
+  PL2: [
+    { codigo: '9132LQ630BPSA', descripcion: 'Smart TV LG 32" Full HD AI ThinQ 32LQ630BPSA' },
+    { codigo: '9155QNED80SRA', descripcion: 'SMART TV LG NANOCELL 86" ULTRA HD AI THINQ 86NANO80TSA' },
+    { codigo: '9170UR8750PSA', descripcion: 'AIRE ACOND. HISENSE SPLIT 3200W FRIO CALOR CL. A (U.E.)' },
+    { codigo: '9175C450NS', descripcion: 'AIRE ACOND. HISENSE SPLIT 3400W FRIO CALOR CL. A (U.I.)' },
+    { codigo: '91AS12UR4SVRCD02NE', descripcion: 'AIRE ACOND. PHILCO BLACK SPLIT 2560W FRIO CALOR CL. A (U.E.)' },
+    { codigo: '91AS12UR4SVRCD02NI', descripcion: 'AIRE ACOND. PHILCO SPLIT 6000W FRIO CALOR CL. A (U.E.)' },
+    { codigo: '91AS18UR4SXSCA00EPI', descripcion: 'AIRE ACONDICIONADO SANSEI SPLIT 2750 W F/C (U.E.)' },
+    { codigo: '91AS18UR4SXSCA00IPI', descripcion: 'EXPRIMIDOR DE JUGO ATMA' },
+    { codigo: '91AS30HR4SBBTG00E', descripcion: 'Horno grill 90 litros' },
+    { codigo: '91AS30HR4SBBTG00I', descripcion: 'Hidrolavadora 1100W' },
+    { codigo: '91DV43X7180', descripcion: 'MICROONDAS LG INVERTIR 42 LITROS NEO CHEFF NEGRO ESPEJADO' },
+    { codigo: '91MT5000', descripcion: 'Aspiradora Philco Tacho 18L' },
+    { codigo: '91NXS25HA4CNE', descripcion: 'Lavarropas carga superior GRIS PHILCO PHCS07B' },
+    { codigo: '91NXS25HA4CNI', descripcion: 'Heladera Cíclica Top Mount Blanca PHILCO PHCT225B' },
+    { codigo: '91OLED65C3PSA', descripcion: 'HELADERA TOP MOUNT NO FROST 198L BRUTO PHILCO - PHNT198X2' },
+    { codigo: '91PE1821BP', descripcion: 'HELADERA TOP MOUNT NO FROST 281L NETA CON DISPENSER PHILCO -PHNT267BD2' },
+    { codigo: '91PHS32HA4CNI', descripcion: 'Plancha Seca PHILCO' },
+    { codigo: '91S4NW24K23AE', descripcion: 'CALEFÓN A GAS INVERTER 14 L/MIN TIRO FORZADO SIAM BLANCO' },
+    { codigo: '91S4UW24K23AE', descripcion: 'GUANTE DE BOXEO 14 OZ ROJO' },
+    { codigo: '91SAS32HA4CNE', descripcion: 'PELOTA DE FUTBOL NUMERO 5 BLANCA' },
+    { codigo: '91SAS32HA4CNI', descripcion: 'HORNO GRILL ATMA 35 LITROS CON ANAFE' },
+    { codigo: '91WBA12A', descripcion: 'LAVAVAJILLA HISENSE 13 CUBIERTOS GRIS' },
+    { codigo: '91WBB12A', descripcion: 'HELADERA BAJO MESADA 90L CORAL HSI-BM090BR2 - SIAM RETRO' },
+    { codigo: '9250Q6N', descripcion: 'Exhibidora vertical SIAM 115 litros HSI-EV115B2' },
+    { codigo: '9255US660H0SD', descripcion: 'Exhibidora vertical SIAM 229 litros Blanca HSI-EV229B2' },
+    { codigo: '92ATH-LI010-FRPRF', descripcion: 'COCINA A GAS, 50CM, PHILCO, BLANCO' },
+    { codigo: '92ATH-LI018-FRPRF', descripcion: 'Heladera Ciclica Inox 260 L - Codigo Homa: DF2-34' },
+    { codigo: '92EXAT23IP', descripcion: 'Freezer vertical PHILCO 180 litros Blanco' },
+    { codigo: '92FR246ABP', descripcion: 'EXHIBIDORA VERTICAL PHEV400B2 - PHILCO' },
+    { codigo: '92FR248ABP', descripcion: 'LAVAVAJILLA 12 CUBIERTOS PHILCO BLANCO' },
+    { codigo: '92FR248AWP', descripcion: 'LAVASECARROPAS CARGA FRONTAL 12KG GREY SILVER' },
+    { codigo: '92FR256PHP', descripcion: 'HELADERA COMBI NO FROST 299L NETA PHILCO - PHNC304P' },
+    { codigo: '92FR60ARBP', descripcion: 'HELADERA TOP MOUNT NO FROST DISPENSER + INVERTER 324L NETA PHILCO - PHNT324BDI' },
+    { codigo: '92FR60ARWP', descripcion: 'HELADERA TOP MOUNT NO FROST INVERTER 502L NETA PHILCO - PHNT504XI' },
+    { codigo: '92FSI-CV065B', descripcion: 'SECARROPAS BLANCO PHILCO 3,5KG' },
+    { codigo: '92GE-PH2500ALP', descripcion: 'HELADERA SIDE BY SIDE 555LTS BLANCA CON DISPLAY PHSB555BT' },
+    { codigo: '92H06AFBK1S1', descripcion: 'termotanque eléctrico philco 2000w blanco 100 litros' },
+    { codigo: '92H09AFBK2S5', descripcion: 'HELADERA SIDE BY SIDE NEGRA 468L' },
+    { codigo: '92H09AFBKS4S', descripcion: 'HELADERA HISENSE CÍCLICA TOP MOUNT GRIS 240L' },
+    { codigo: '92HG7022P', descripcion: 'SECADOR DE PELO REVLON' },
+    { codigo: '92HG9022P', descripcion: 'BARRA DE SONIDO LG SQC1 - 160W 2.1' },
+    { codigo: '92HGFA1724UAP', descripcion: 'LAVASECARROPAS INVERTER LG SILVER CARGA FRONTAL WD90VVC4S6 CON AIDD, STEAM, ECO HYBRID DRY Y THINQ 9KG / 5KG 1200 RPM' },
+    { codigo: '92HI1101P', descripcion: 'LAVARROPAS 8KG 3S BLANCO SMART INVERTER' },
+    { codigo: '92HPAT24BP', descripcion: 'WAFLERA MICKEY NEGRA' },
+    { codigo: '92HRBF125B', descripcion: 'LAVARROPA HISENSE 9,5 KG CARGA SUPERIOR' },
+    { codigo: '92HS642D90X', descripcion: 'LAVARROPAS HISENSE 6KG TITANIUM CARGA SUPERIOR' },
+    { codigo: '92JUPH21BP', descripcion: 'AIRE ACOND. NOBLEX SPLIT INVERTER 5200W FRIO CALOR CL. A++ (U.E.)' },
+    { codigo: '92LLJ05N', descripcion: 'AIRE ACOND. LG SPLIT INVERTER 3,5 KW FRIO CALOR (U.I.)' },
+    { codigo: '92MATDGB23UAP', descripcion: 'GAZEBO PHILCO 3X3 AZUL CON 3 PAREDES' },
+    { codigo: '92MH8298DIR-PI', descripcion: 'Horno grill 50 litros c Convección' },
+    { codigo: '92MMFIF210GRISP', descripcion: 'HORNO GRILL 60 LITROS' },
+    { codigo: '92MMFIF210NEGP', descripcion: 'HORNO GRILL 15 LTS CON AIR FRYER - NEGRO' },
+    { codigo: '92MMPHFUNCELP', descripcion: 'HELADERA CÍCLICA SINGLE DOOR 164L NETA CON DISPENSER PHILCO - PHSD170XD' },
+    { codigo: '92MMSHULTAZUP', descripcion: 'Freezer Vertical HISENSE 166 litros RS-20DCS (PLATA)' },
+    { codigo: '92MMSHULTNEGP', descripcion: 'HELADERA HISENSE BLANCA TOP MOUNT INVERTER 250 LITROS' },
+    { codigo: '92MPCHLVA01PI', descripcion: 'AIRE ACOND. WHIRLPOOL SPLIT INVERTER 3000 FRIO CALOR CL. A (U.I.)' },
+    { codigo: '92MPHDW20UAP', descripcion: 'CLIMATIZADOR DE AIRE PORTATIL PHILCO FRIO 6 LITROS' },
+    { codigo: '92MPHRW20UAP', descripcion: 'FREEZER VERTICAL 151L NETO NEGRO SIAM - FSI-CV181N' },
+    { codigo: '92MT5000', descripcion: 'GENERADOR 6.5KVA' },
+    { codigo: '92PEAT1351WP', descripcion: 'Licuadora de vaso roja' },
+    { codigo: '92PHAST1821PI', descripcion: 'LAVARROPAS SEMIAUTOMATICO 5KG BLANCO SIAM - LSI-SS05B' },
+    { codigo: '92PHBKS26HA6ANE', descripcion: 'HELADERA BAJO MESADA 93L BLANCA PHILCO - PHBM093B2' },
+    { codigo: '92PHBKS26HA6ANI', descripcion: 'CAVA TERMOELECTRICA 18 BOTELLAS PHILCO - PHCAV018N2' },
+    { codigo: '92PHCAV012N', descripcion: 'HELADERA PHILCO 269LTS COMBI PLATA PHCC269P' },
+  ],
+};
 
 // ─── CONFIGURACIÓN DE SUPABASE ───────────────────────────────────────────────
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
@@ -193,7 +359,6 @@ const SKUForm = ({ initialSku, onSave, onCancel }) => {
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
-  const [showScanner, setShowScanner] = useState(false);
   const [photo, setPhoto] = useState(null);
 
   const handleChange = (e) => {
@@ -201,9 +366,20 @@ const SKUForm = ({ initialSku, onSave, onCancel }) => {
     setFormData((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
 
-  const handleBarcodeDetected = (code) => {
-    setFormData((prev) => ({ ...prev, sku: code }));
-    setShowScanner(false);
+  // Al cambiar la nave, limpiar el SKU seleccionado
+  const handleNaveChange = (nave) => {
+    setFormData((prev) => ({ ...prev, nave, sku: '', descripcion: '' }));
+  };
+
+  // Al seleccionar un SKU del desplegable, auto-completar la descripción
+  const handleSkuChange = (e) => {
+    const codigo = e.target.value;
+    const item = SKU_POR_NAVE[formData.nave]?.find(s => s.codigo === codigo);
+    setFormData((prev) => ({
+      ...prev,
+      sku: codigo,
+      descripcion: item ? item.descripcion : '',
+    }));
   };
 
   const handlePhotoCapture = (blob, preview) => {
@@ -237,7 +413,7 @@ const SKUForm = ({ initialSku, onSave, onCancel }) => {
     setErrors({});
 
     if (!formData.sku || !formData.descripcion || !formData.max_apilado) {
-      setErrors({ form: 'Completa los campos obligatorios (SKU, Descripción, Apilado).' });
+      setErrors({ form: 'Seleccioná un SKU y completá el campo Apilado.' });
       setLoading(false);
       return;
     }
@@ -282,38 +458,15 @@ const SKUForm = ({ initialSku, onSave, onCancel }) => {
     <div className="min-h-screen bg-[#efefff] pb-24 font-verdana">
       <Header title="Registro Parasum" />
 
-      {showScanner && (
-        <BarcodeScanner
-          onDetected={handleBarcodeDetected}
-          onClose={() => setShowScanner(false)}
-        />
-      )}
-
       <form onSubmit={handleSubmit} className="px-4 py-6 max-w-md mx-auto space-y-6">
         {/* ── Datos principales ── */}
         <Card>
-          <InputGroup
-            label="Código SKU"
-            id="sku"
-            value={formData.sku}
-            onChange={handleChange}
-            placeholder="Ingresá o escaneá el código"
-            icon={Keyboard}
-            error={errors.sku}
-            rightElement={
-              <button type="button" onClick={() => setShowScanner(true)}
-                className="bg-[#0099A8] text-white px-4 rounded-[12px] flex items-center gap-1 active:scale-95 transition-all shrink-0">
-                <ScanLine size={20} />
-                <span className="text-xs font-bold hidden sm:inline">Escanear</span>
-              </button>
-            }
-          />
-
+          {/* Selector de Nave */}
           <div className="mb-4">
             <label className="block text-[9px] font-bold text-gray-500 mb-2 uppercase">Nave</label>
             <div className="flex bg-gray-100 p-1 rounded-xl">
               {['PL2', 'PL3'].map((n) => (
-                <button key={n} type="button" onClick={() => setFormData({ ...formData, nave: n })}
+                <button key={n} type="button" onClick={() => handleNaveChange(n)}
                   className={`flex-1 py-3 rounded-[10px] text-sm font-bold transition-all ${
                     formData.nave === n ? 'bg-[#0099A8] text-white shadow-md' : 'text-gray-500'
                   }`}>{n}</button>
@@ -321,13 +474,31 @@ const SKUForm = ({ initialSku, onSave, onCancel }) => {
             </div>
           </div>
 
-          <InputGroup
-            label="Descripción"
-            id="descripcion"
-            value={formData.descripcion}
-            onChange={handleChange}
-            placeholder="Nombre del artículo"
-          />
+          {/* Desplegable de SKU filtrado por nave */}
+          <div className="mb-4">
+            <label className="block text-[9px] uppercase tracking-wider font-bold text-gray-500 mb-1">Código SKU</label>
+            <select
+              value={formData.sku}
+              onChange={handleSkuChange}
+              className={`w-full bg-gray-50 border ${errors.sku ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-200'} text-gray-800 text-base rounded-[12px] focus:ring-2 focus:ring-[#0099A8] focus:border-transparent outline-none py-3 px-4 appearance-none`}
+            >
+              <option value="">— Seleccioná un SKU —</option>
+              {(SKU_POR_NAVE[formData.nave] || []).map((item) => (
+                <option key={item.codigo} value={item.codigo}>
+                  {item.codigo} — {item.descripcion}
+                </option>
+              ))}
+            </select>
+            {errors.sku && <p className="text-red-500 text-[9px] mt-1 font-bold">{errors.sku}</p>}
+          </div>
+
+          {/* Descripción auto-completada (solo lectura) */}
+          {formData.descripcion && (
+            <div className="mb-4 bg-gray-100 rounded-[12px] px-4 py-3">
+              <p className="text-[9px] uppercase tracking-wider font-bold text-gray-500 mb-1">Descripción</p>
+              <p className="text-sm text-gray-800 font-medium">{formData.descripcion}</p>
+            </div>
+          )}
         </Card>
 
         {/* ── Foto del producto ── */}
