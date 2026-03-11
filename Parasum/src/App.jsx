@@ -415,6 +415,24 @@ const SKUForm = ({ initialSku, onSave, onCancel }) => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [photo, setPhoto] = useState(null);
+  const [skusRegistrados, setSkusRegistrados] = useState([]);
+
+  // Cargar SKUs ya registrados en Supabase para filtrarlos del desplegable
+  useEffect(() => {
+    const fetchRegistrados = async () => {
+      if (!supabase) return;
+      const { data } = await supabase
+        .from('maestro_sku')
+        .select('sku, nave');
+      if (data) setSkusRegistrados(data);
+    };
+    fetchRegistrados();
+  }, []);
+
+  // SKUs disponibles = los del catálogo menos los ya registrados en esa nave
+  const skusDisponibles = (SKU_POR_NAVE[formData.nave] || []).filter(
+    (item) => !skusRegistrados.some(r => r.sku === item.codigo && r.nave === formData.nave)
+  );
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -538,7 +556,7 @@ const SKUForm = ({ initialSku, onSave, onCancel }) => {
               className={`w-full bg-gray-50 border ${errors.sku ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-200'} text-gray-800 text-base rounded-[12px] focus:ring-2 focus:ring-[#0099A8] focus:border-transparent outline-none py-3 px-4 appearance-none`}
             >
               <option value="">— Seleccioná un SKU —</option>
-              {(SKU_POR_NAVE[formData.nave] || []).map((item) => (
+              {skusDisponibles.map((item) => (
                 <option key={item.codigo} value={item.codigo}>
                   {item.codigo} — {item.descripcion}
                 </option>
