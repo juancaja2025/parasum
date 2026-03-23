@@ -430,7 +430,7 @@ const SKUForm = ({ initialSku, onSave, onCancel }) => {
               <option value="">— Seleccioná un producto —</option>
               {skusDisponibles.map((item) => (
                 <option key={item.codigo} value={item.codigo}>
-                  [{item.localizador}] {item.descripcion}
+                  {item.codigo} — [{item.localizador}] {item.descripcion}
                 </option>
               ))}
             </select>
