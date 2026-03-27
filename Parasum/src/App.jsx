@@ -2,111 +2,71 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import {
   Box, ScanLine, ChevronRight, AlertCircle,
-  Layers, Truck, Loader2, Camera, X
+  Layers, Truck, Loader2, Camera, X, Tag, FileText, Search
 } from 'lucide-react';
 
-// ─── LISTADO DE SKUs POR NAVE ─────────────────────────────────────────────────
-// Fuente: SKU PARASUM.xlsx (actualizado 2026-03-23)
-const SKU_POR_NAVE = {
-  PL3: [
-    { codigo: '9143A42K', descripcion: 'TV 43" Hisense FHD A42K', localizador: 'A05.000.000 / A19.000.000' },
-    { codigo: '9150A64N', descripcion: 'TV HISENSE 50" UHD 4K A6N', localizador: 'A09.000.000 / B05.000.000 / B16.000.000 / B18.000.000 / REC.000.000' },
-    { codigo: '9155Q6N', descripcion: 'TV HISENSE 55" QLED Q6N', localizador: 'A03.000.000 / B06.000.000' },
-    { codigo: '9165Q6N', descripcion: 'TV HISENSE 65" QLED Q6N', localizador: 'A07.000.000' },
-    { codigo: '91AS09HR4SYRKG00E', descripcion: 'AIRE ACOND. HISENSE SPLIT 2500W FRIO CALOR CL. A (U.E.)', localizador: 'B06.000.000 / B16.000.000' },
-    { codigo: '91AS12UR4SVRCA02BKNE', descripcion: 'AIRE ACOND. HISENSE SPLIT INVERTER BLACK 3300W FRIO CALOR CL. A (U.E.)', localizador: 'A02.000.000 / B06.000.000' },
-    { codigo: '91AS18HR4SXSKG00PX4E', descripcion: 'AIRE ACOND. HISENSE SPLIT 5000W FRIO CALOR CL. A (U.E.)', localizador: 'A16.000.000 / B06.000.000 / B17.000.000' },
-    { codigo: '91AS18UR4SXSCA00BKNE', descripcion: 'AIRE ACOND. HISENSE SPLIT INVERTER BLACK 5500W FRIO CALOR CL. A++ (U.E.)', localizador: 'B06.000.000 / B09.000.000' },
-    { codigo: '91AS22HR4SXTKG00E', descripcion: 'AIRE ACOND. HISENSE SPLIT 6300W FRIO CALOR CL. A (U.E.)', localizador: 'B06.000.000 / B07.000.000' },
-    { codigo: '91ASGEN2', descripcion: 'ASADERA GENÉRICA', localizador: 'B10.000.000' },
-    { codigo: '91NXIN35HA3BNE', descripcion: 'AIRE ACOND. NOBLEX SPLIT INVERTER 3550W FRIO CALOR CL. A++ (U.E.)', localizador: 'B07.000.000' },
-    { codigo: '91PLD40HS24', descripcion: 'SMART TV 40" PHILCO - VIDAA', localizador: 'B18.000.000' },
-    { codigo: '91S4NW12JA31A', descripcion: 'AIRE ACOND. LG SPLIT INVERTER WIFI 3,5 KW FRIO CALOR (U.I.)', localizador: 'A17.000.000 / B06.000.000 / B18.000.000' },
-    { codigo: '91S4NW18KL31A', descripcion: 'AIRE ACOND. LG SPLIT INVERTER WIFI 5 KW FRIO CALOR (U.I.)', localizador: 'A16.000.000 / B06.000.000 / B08.000.000' },
-    { codigo: '91S4NW24K231E', descripcion: 'AIRE ACOND. LG SPLIT INVERTER WIFI 6 KW FRIO CALOR (U.I.)', localizador: 'B06.000.000 / B07.000.000' },
-    { codigo: '94FR246ABP', descripcion: 'FREIDORA DE AIRE CON VISOR NEGRA 6 LITROS', localizador: 'A07.000.000 / ANA.LIS.IS' },
-    { codigo: '94FSI-CV065B', descripcion: 'Freezer Vertical SIAM 65 litros FSI-CV065B', localizador: 'A09.000.000 / PL4.000.000' },
-    { codigo: '94HRBF125B', descripcion: 'HELADERA BAJO MESADA 123 LITROS ( NEGRA)', localizador: 'A16.000.000' },
-    { codigo: '92PHCA14B', descripcion: 'CALEFÓN PHILCO 14/L MIN - BLANCO - TIRO FORZADO - TECNOLOGÍA PILOTLESS', localizador: 'B06.000.000' },
-    { codigo: '94PHCAV012N', descripcion: 'Cava termoeléctrica 12 botellas PHILCO PHCAV012N', localizador: 'A09.000.000 / B11.000.000 / CAL.000.000' },
-    { codigo: '92PHLF6510B2', descripcion: 'Lavarropas carga frontal 6,5kg PHILCO - Blanco PHLF6510B2', localizador: 'A14.000.000 / B06.000.000 / SIN.000.000' },
-    { codigo: '92PHSB470XD2', descripcion: 'HELADERA SBS CROSSDOOR 385L NETOS CON DISPENSER + INVERTER INOX PHILCO - PHSB470XD2', localizador: 'B06.000.000' },
-    { codigo: '94PHSD179BD2', descripcion: 'HELADERA SINGLE DOOR 161 LITROS CON DISPENSER PHILCO PHSD179BD2 BLANCO', localizador: 'B18.000.000 / REC.000.000' },
-    { codigo: '92PHTE050B2', descripcion: 'termotanque eléctrico philco 2000w blanco 50 litros', localizador: 'B06.000.000' },
-    { codigo: '92PHTE080B2', descripcion: 'termotanque eléctrico philco 1500w blanco 80 litros', localizador: 'B06.000.000 / B10.000.000' },
-    { codigo: '92RL230WW4AU', descripcion: 'HELADERA SINGLE DOOR HISENSE BLANCA 179 L', localizador: 'B06.000.000 / B07.000.000 / SCR.OCA.SA' },
-    { codigo: '94RT3N375NMC', descripcion: 'HELADERA HISENSE TOP MOUNT NO FROST INOX INVERTER DISPENSER 375L', localizador: 'A08.000.000 / A11.000.000 / A12.000.000 / A16.000.000 / A17.000.000 / B09.000.000 / SIN.000.000' },
-    { codigo: '94TO20WP', descripcion: 'Tostadora Blanca ATMA', localizador: 'A07.000.000 / A08.000.000 / CAL.000.000' },
-    { codigo: '92WM10WVC4S6', descripcion: 'LAVARROPAS INVERTER LG BLANCO WM10WVC4S6 CON AI DD¿ Y THINQ 10KG 1400 RPM', localizador: 'A16.000.000 / ANA.LIS.IS / B06.000.000 / B16.000.000' },
-    { codigo: '94CF3N297NEW', descripcion: 'FREEZER HORIZONTAL HISENSE 297L', localizador: 'A17.000.000 / A18.000.000 / B12.000.000' },
-    { codigo: '94FSI-CV181B', descripcion: 'Freezer Vertical SIAM 181 litros FSI-CV181B', localizador: 'A18.000.000 / B11.000.000' },
-    { codigo: '94HGFA1724UAP', descripcion: 'HORNO GRILL AIR FRYER ATMA 17 LITROS', localizador: 'A08.000.000 / B07.000.000' },
-    { codigo: '94HSI-BM50BR2', descripcion: 'HELADERA BAJO MESADA 50L CORAL - SIAM RETRO HSI-BM50BR2', localizador: 'A12.000.000' },
-    { codigo: '94LSI-LJ15X', descripcion: 'LAVAVAJILLAS 15 CUBIERTOS INOX', localizador: 'B04.000.000' },
-    { codigo: '94PHCAV028N', descripcion: 'Cava termoeléctrica de vinos 28 Botellas PHILCO PHCAV028N', localizador: 'A09.000.000' },
-    { codigo: '94PHCH144B', descripcion: 'FREEZER POZO BLANCO PHILCO - PHCH144B', localizador: 'PL4.000.000' },
-    { codigo: '94PHCH410BM', descripcion: 'Freezer de pozo 400 L PHCH410BM', localizador: 'A08.000.000 / A10.000.000' },
-    { codigo: '94PHCH535BM', descripcion: 'Freezer de pozo 520 L PHCH535BM', localizador: 'B09.000.000 / SIN.000.000' },
-    { codigo: '94PHL-12016V50', descripcion: 'PILETA ESTRUCTURAL REDONDA PLUS CON PATRÓN RATÁN 6765 L', localizador: 'PL4.000.000' },
-    { codigo: '94PHNC382XT', descripcion: 'HELADERA COMBI NO FROST 339 L INOX PHILCO - PHNC382XT', localizador: 'A13.000.000' },
-    { codigo: '94RT3N320NMC', descripcion: 'HELADERA HISENSE TOP MOUNT NO FROST INVERTER INOX 320L', localizador: 'A08.000.000 / CAL.000.000' },
-    { codigo: '94PHCAV08N2', descripcion: 'CAVA TERMOELECTRICA 8 BOTELLAS PHILCO - PHCAV08N2', localizador: 'B07.000.000' },
-    { codigo: '94PHNC417XI', descripcion: 'HELADERA COMBI NO FROST INVERTER 374L INOX PHILCO - PHNC417XI', localizador: 'B01.000.000' },
-    { codigo: '94RC-67WSG', descripcion: 'Heladera SBS Hisense Black Glass 564 litros', localizador: 'SIN.000.000' },
-    { codigo: '94RQ697HB', descripcion: 'Heladera Cross Door Hisense Inverter + Smart Screen 640 litros', localizador: 'A11.000.000' },
-    { codigo: '94RS-20DCS', descripcion: 'Freezer Vertical Hisense Plata 169 litros', localizador: 'A17.000.000 / SCR.00.000' },
-    { codigo: '94RT3N461NMC', descripcion: 'HELADERA HISENSE TOP MOUNT NO FROST INVERTER INOX DISPENSER 461L', localizador: 'A12.000.000 / A13.000.000 / A17.000.000 / SIN.000.000' },
-  ],
-  PL2: [
-    { codigo: '91AS12HR4SVRKG03PX4E', descripcion: 'AIRE ACOND. HISENSE SPLIT 3200W FRIO CALOR CL. A (U.E.)', localizador: 'A02.000.000' },
-    { codigo: '94RVDR5230RLA2AV1', descripcion: 'SECADOR DE PELO REVLON', localizador: 'A04.000.000' },
-    { codigo: '94WS027DBP', descripcion: 'WAFLERA MICKEY NEGRA', localizador: 'A04.000.000' },
-    { codigo: '91AS12HR4SVRKG03PX4I', descripcion: 'AIRE ACOND. HISENSE SPLIT 3400W FRIO CALOR CL. A (U.I.)', localizador: 'A05.000.000' },
-    { codigo: '94HS622E90S', descripcion: 'LAVAVAJILLA HISENSE 13 CUBIERTOS GRIS', localizador: 'A05.000.000' },
-    { codigo: '94PHSA035B', descripcion: 'SECARROPAS BLANCO PHILCO 3,5KG', localizador: 'A05.000.000' },
-    { codigo: '94RS3N428NAB', descripcion: 'HELADERA SIDE BY SIDE NEGRA 468L', localizador: 'A05.000.000' },
-    { codigo: '94PHBM093B2', descripcion: 'HELADERA BAJO MESADA 93L BLANCA PHILCO - PHBM093B2', localizador: 'A06.000.000' },
-    { codigo: '91SAS25HA4CNE', descripcion: 'AIRE ACONDICIONADO SANSEI SPLIT 2750 W F/C (U.E.)', localizador: 'A09.000.000' },
-    { codigo: '94GB-XLFTS05FUT5W', descripcion: 'PELOTA DE FUTBOL NUMERO 5 BLANCA', localizador: 'ANA.LIS.IS' },
-    { codigo: '9132LQ630BPSA', descripcion: 'Smart TV LG 32" Full HD AI ThinQ 32LQ630BPSA', localizador: 'B05.000.000' },
-    { codigo: '9186NANO80TSA', descripcion: 'SMART TV LG NANOCELL 86" ULTRA HD AI THINQ 86NANO80TSA', localizador: 'B05.000.000' },
-    { codigo: '94PHCT260X', descripcion: 'Heladera Ciclica Inox 260 L - Codigo Homa: DF2-34', localizador: 'B05.000.000' },
-    { codigo: '94RT1N240NED1', descripcion: 'HELADERA HISENSE CÍCLICA TOP MOUNT GRIS 240L', localizador: 'B08.000.000' },
-    { codigo: '94WF3S8043BW', descripcion: 'LAVARROPAS 8KG 3S BLANCO SMART INVERTER', localizador: 'B08.000.000' },
-    { codigo: '94GB-BX2010BOX14R', descripcion: 'GUANTE DE BOXEO 14 OZ ROJO', localizador: 'B12.000.000' },
-    { codigo: '94WTJA802T', descripcion: 'LAVARROPAS HISENSE 6KG TITANIUM CARGA SUPERIOR', localizador: 'C01.000.000' },
-    { codigo: '94SQC1', descripcion: 'BARRA DE SONIDO LG SQC1 - 160W 2.1', localizador: 'C02.000.000' },
-    { codigo: '94PHNT324BDI', descripcion: 'HELADERA TOP MOUNT NO FROST DISPENSER + INVERTER 324L NETA PHILCO - PHNT324BDI', localizador: 'C07.000.000' },
-    { codigo: '94WTJA1402T', descripcion: 'LAVARROPA HISENSE 9,5 KG CARGA SUPERIOR', localizador: 'C07.000.000' },
-    { codigo: '94HSI-BM090BR2', descripcion: 'HELADERA BAJO MESADA 90L CORAL HSI-BM090BR2 - SIAM RETRO', localizador: 'C08.000.000' },
-    { codigo: '94HSI-EV115B2', descripcion: 'Exhibidora vertical SIAM 115 litros HSI-EV115B2', localizador: 'C08.000.000' },
-    { codigo: '91WBJ12B', descripcion: 'AIRE ACOND. WHIRLPOOL SPLIT INVERTER 3000 FRIO CALOR CL. A (U.I.)', localizador: 'C08.000.000' },
-    { codigo: '92MH8298DIR-PI', descripcion: 'MICROONDAS LG INVERTIR 42 LITROS NEO CHEFF NEGRO ESPEJADO', localizador: 'C12.000.000' },
-    { codigo: '92PHCS07B', descripcion: 'Lavarropas carga superior GRIS PHILCO PHCS07B', localizador: 'C12.000.000' },
-    { codigo: '92PHNT198X2', descripcion: 'HELADERA TOP MOUNT NO FROST 198L BRUTO PHILCO - PHNT198X2', localizador: 'C12.000.000' },
-    { codigo: '92PSP1217PI', descripcion: 'Plancha Seca PHILCO', localizador: 'C12.000.000' },
-    { codigo: '94PHSB555BT', descripcion: 'HELADERA SIDE BY SIDE 555LTS BLANCA CON DISPLAY PHSB555BT', localizador: 'CAL.000.000' },
-    { codigo: '94WD90VVC4S6', descripcion: 'LAVASECARROPAS INVERTER LG SILVER CARGA FRONTAL WD90VVC4S6 CON AIDD¿, STEAM, ECO HYBRID DRY Y THINQ 9KG / 5KG 1200 RPM', localizador: 'CAL.000.000' },
-    { codigo: '94PHLJ12B', descripcion: 'LAVAVAJILLA 12 CUBIERTOS PHILCO BLANCO', localizador: 'SCR.OCA.SA' },
-    { codigo: '94CLSI-CA14B', descripcion: 'CALEFÓN A GAS INVERTER 14 L/MIN TIRO FORZADO SIAM BLANCO', localizador: 'SIN.000.000' },
-    { codigo: '94HGAB3024API', descripcion: 'HORNO GRILL ATMA 35 LITROS CON ANAFE', localizador: 'SIN.000.000' },
-    { codigo: '94HSI-EV229B2', descripcion: 'Exhibidora vertical SIAM 229 litros Blanca HSI-EV229B2', localizador: 'SIN.000.000' },
-    { codigo: '94PHCV181B', descripcion: 'Freezer vertical PHILCO 180 litros Blanco', localizador: 'SIN.000.000' },
-    { codigo: '94PHEV400B2', descripcion: 'EXHIBIDORA VERTICAL PHEV400B2 - PHILCO', localizador: 'SIN.000.000' },
-    { codigo: '94PHNT504XI', descripcion: 'HELADERA TOP MOUNT NO FROST INVERTER 502L NETA PHILCO - PHNT504XI', localizador: 'SIN.000.000' },
-  ],
-};
+// ─── CATEGORÍAS (CRITERIO) ──────────────────────────────────────────────────
+// Valores existentes en el Google Sheet para autocompletar
+const CRITERIOS = [
+  'Accesorio HVAC','Accesorio Pileta',
+  'Aire 2500W','Aire 3000W','Aire 3300W','Aire 3550W','Aire 3750W',
+  'Aire 5000W','Aire 5500W','Aire 6300W','Aire 8000W','Aire 8750W',
+  'Aire Comercial','Aire Portatil',
+  'Aire Ventana 2500W','Aire Ventana 3200W','Aire Ventana 5000W',
+  'Aspiradora','Audio',
+  'Bicicleta MTB Acero','Bicicleta MTB Aluminio','Bicicleta Spinning',
+  'Calefon 14L/min','Campana',
+  'Cava 8','Cava 12','Cava 18','Cava 28','Cava 52',
+  'Climatizador','Cocina','Colchón','Cortina','Deportes',
+  'Exhibidora',
+  'Freezer','Freezer 65L','Freezer 100L','Freezer 169L','Freezer 181L','Freezer 297L','Freezer 400L','Freezer 520L',
+  'Freidora de Aire','Freidora 9L','Freidora 12L','Freidora 17L',
+  'Gazebo','Generador',
+  'Heladera 50L','Heladera 123L','Heladera 161L','Heladera 179L','Heladera 250L',
+  'Heladera 302L','Heladera 320L','Heladera 339L','Heladera 374L','Heladera 375L',
+  'Heladera 385L','Heladera 461L','Heladera 564L','Heladera 640L','Heladera Panelable',
+  'Hogar Pequeño','Horno Empotrar',
+  'Horno Grill 30L','Horno Grill 50L','Horno Grill 60L','Horno Grill 70L',
+  'HVAC Comercial','Kayak',
+  'Lavarropas 6.5kg','Lavarropas 8kg','Lavarropas 10kg','Lavarropas Semi',
+  'Lavasecarropas','Lavavajillas 14',
+  'Microondas','Monitor','Notebook',
+  'Pileta','Plancha','Purificador',
+  'Secador','Secarropas',
+  'Termotanque','Tostadora',
+  'TV 32"','TV 40"','TV 43"','TV 50"','TV 55"','TV 65"','TV 75"','TV 85"',
+  'Ventilador','Waflera',
+].sort();
 
-// ─── CONFIGURACIÓN DE SUPABASE ───────────────────────────────────────────────
+// ─── CONFIGURACIÓN ──────────────────────────────────────────────────────────
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const GOOGLE_SCRIPT_URL = import.meta.env.VITE_GOOGLE_SCRIPT_URL || '';
 
 let supabase = null;
 if (SUPABASE_URL && SUPABASE_ANON_KEY) {
   supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
 
-// ─── COMPONENTES UI REUTILIZABLES ────────────────────────────────────────────
+// ─── FUNCIÓN: ENVIAR A GOOGLE SHEETS ────────────────────────────────────────
+const appendToGoogleSheet = async (row) => {
+  if (!GOOGLE_SCRIPT_URL) {
+    console.warn('VITE_GOOGLE_SCRIPT_URL no configurada — no se sincroniza con Google Sheets');
+    return { success: false, error: 'URL no configurada' };
+  }
+  try {
+    const res = await fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify(row),
+    });
+    return await res.json();
+  } catch (err) {
+    console.error('Error enviando a Google Sheets:', err);
+    return { success: false, error: err.message };
+  }
+};
+
+// ─── COMPONENTES UI REUTILIZABLES ───────────────────────────────────────────
 
 const Button = ({ children, variant = 'primary', onClick, className = '', type = 'button', disabled = false }) => {
   const style = variant === 'primary'
@@ -149,7 +109,7 @@ const Header = ({ title }) => (
   </header>
 );
 
-// ─── COMPONENTE: ESCÁNER DE BARCODE ──────────────────────────────────────────
+// ─── COMPONENTE: ESCÁNER DE BARCODE ─────────────────────────────────────────
 
 const BarcodeScanner = ({ onDetected, onClose }) => {
   const scannerRef = useRef(null);
@@ -216,7 +176,7 @@ const BarcodeScanner = ({ onDetected, onClose }) => {
   );
 };
 
-// ─── COMPONENTE: CAPTURA DE FOTO ─────────────────────────────────────────────
+// ─── COMPONENTE: CAPTURA DE FOTO ────────────────────────────────────────────
 
 const PhotoCapture = ({ photo, onCapture, onRemove }) => {
   const fileInputRef = useRef(null);
@@ -275,56 +235,89 @@ const PhotoCapture = ({ photo, onCapture, onRemove }) => {
   );
 };
 
-// ─── FORMULARIO DE SKU ───────────────────────────────────────────────────────
+// ─── COMPONENTE: SELECTOR DE CRITERIO CON BÚSQUEDA ─────────────────────────
+
+const CriterioSelector = ({ value, onChange, error }) => {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+
+  const filtered = CRITERIOS.filter(c =>
+    c.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div className="mb-4">
+      <label className="block text-[9px] uppercase tracking-wider font-bold text-gray-500 mb-1">Criterio / Categoría</label>
+
+      {/* Valor seleccionado o botón para abrir */}
+      <button type="button" onClick={() => setOpen(!open)}
+        className={`w-full bg-gray-50 border ${error ? 'border-red-500' : 'border-gray-200'} text-left text-base rounded-[12px] py-3 px-4 flex items-center justify-between`}>
+        <span className={value ? 'text-gray-800' : 'text-gray-400'}>
+          {value || '— Seleccioná una categoría —'}
+        </span>
+        <Tag size={18} className="text-gray-400" />
+      </button>
+
+      {open && (
+        <div className="mt-2 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-hidden">
+          {/* Buscador */}
+          <div className="p-2 border-b border-gray-100 flex items-center gap-2">
+            <Search size={16} className="text-gray-400" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar categoría..."
+              className="flex-1 text-sm outline-none bg-transparent"
+              autoFocus
+            />
+          </div>
+          {/* Lista */}
+          <div className="max-h-48 overflow-y-auto">
+            {filtered.map((c) => (
+              <button key={c} type="button"
+                onClick={() => { onChange(c); setOpen(false); setSearch(''); }}
+                className={`w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 transition-colors ${value === c ? 'bg-[#0099A8]/10 text-[#0099A8] font-bold' : 'text-gray-700'}`}>
+                {c}
+              </button>
+            ))}
+            {filtered.length === 0 && search && (
+              <button type="button"
+                onClick={() => { onChange(search); setOpen(false); setSearch(''); }}
+                className="w-full text-left px-4 py-2.5 text-sm text-[#0099A8] font-bold">
+                + Usar "{search}" como nuevo criterio
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+      {error && <p className="text-red-500 text-[9px] mt-1 font-bold">{error}</p>}
+    </div>
+  );
+};
+
+// ─── FORMULARIO DE NUEVO SKU ────────────────────────────────────────────────
 
 const SKUForm = ({ initialSku, onSave, onCancel }) => {
   const [formData, setFormData] = useState({
-    sku: initialSku || '', descripcion: '', localizador: '', nave: 'PL2',
+    sku: initialSku || '', descripcion: '', nave: 'PL2', criterio: '',
     largo: '', ancho: '', alto: '', peso: '',
     max_apilado: '', se_palletiza: false, unidades_pallet: '',
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [photo, setPhoto] = useState(null);
-  const [skusRegistrados, setSkusRegistrados] = useState([]);
-
-  // Cargar SKUs ya registrados en Supabase para filtrarlos del desplegable
-  useEffect(() => {
-    const fetchRegistrados = async () => {
-      if (!supabase) return;
-      const { data } = await supabase
-        .from('maestro_sku')
-        .select('sku, nave');
-      if (data) setSkusRegistrados(data);
-    };
-    fetchRegistrados();
-  }, []);
-
-  // SKUs disponibles = los del catálogo menos los ya registrados en esa nave
-  const skusDisponibles = (SKU_POR_NAVE[formData.nave] || []).filter(
-    (item) => !skusRegistrados.some(r => r.sku === item.codigo && r.nave === formData.nave)
-  );
+  const [showScanner, setShowScanner] = useState(false);
+  const [sheetStatus, setSheetStatus] = useState(null); // null | 'ok' | 'error'
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
 
-  // Al cambiar la nave, limpiar el SKU seleccionado
-  const handleNaveChange = (nave) => {
-    setFormData((prev) => ({ ...prev, nave, sku: '', descripcion: '', localizador: '' }));
-  };
-
-  // Al seleccionar un SKU del desplegable, auto-completar la descripción y localizador
-  const handleSkuChange = (e) => {
-    const codigo = e.target.value;
-    const item = SKU_POR_NAVE[formData.nave]?.find(s => s.codigo === codigo);
-    setFormData((prev) => ({
-      ...prev,
-      sku: codigo,
-      descripcion: item ? item.descripcion : '',
-      localizador: item ? item.localizador : '',
-    }));
+  const handleScanResult = (code) => {
+    setFormData((prev) => ({ ...prev, sku: code }));
+    setShowScanner(false);
   };
 
   const handlePhotoCapture = (blob, preview) => {
@@ -337,71 +330,99 @@ const SKUForm = ({ initialSku, onSave, onCancel }) => {
     const { error } = await supabase.storage
       .from('sku-fotos')
       .upload(fileName, photo.blob, { contentType: 'image/jpeg' });
-
     if (error) {
       console.error('Error subiendo foto:', error);
       return null;
     }
-
     const { data } = supabase.storage.from('sku-fotos').getPublicUrl(fileName);
     return data.publicUrl;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!supabase) {
-      alert('Configura VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY');
-      return;
-    }
-
     setLoading(true);
     setErrors({});
+    setSheetStatus(null);
 
-    if (!formData.sku || !formData.descripcion || !formData.max_apilado) {
-      setErrors({ form: 'Seleccioná un SKU y completá el campo Apilado.' });
+    // Validación
+    const newErrors = {};
+    if (!formData.sku.trim()) newErrors.sku = 'Ingresá un código SKU';
+    if (!formData.descripcion.trim()) newErrors.descripcion = 'Ingresá una descripción';
+    if (!formData.criterio.trim()) newErrors.criterio = 'Seleccioná un criterio';
+    if (!formData.max_apilado) newErrors.max_apilado = 'Ingresá el apilado máximo';
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       setLoading(false);
       return;
     }
 
-    const { data: existing } = await supabase
-      .from('maestro_sku')
-      .select('id')
-      .eq('sku', formData.sku)
-      .eq('nave', formData.nave)
-      .maybeSingle();
+    const skuClean = formData.sku.trim().toUpperCase();
 
-    if (existing) {
-      setErrors({ sku: `El SKU ${formData.sku} ya existe en ${formData.nave}` });
-      setLoading(false);
-      return;
-    }
-
-    const fotoUrl = await uploadPhoto(formData.sku);
-
-    const { error } = await supabase.from('maestro_sku').insert([{
-      sku: formData.sku,
-      descripcion: formData.descripcion,
+    // Datos comunes para Supabase y Google Sheets
+    const rowData = {
+      sku: skuClean,
+      descripcion: formData.descripcion.trim(),
       nave: formData.nave,
+      criterio: formData.criterio,
       largo_cm: parseFloat(formData.largo) || 0,
       ancho_cm: parseFloat(formData.ancho) || 0,
       alto_cm: parseFloat(formData.alto) || 0,
       peso_kg: parseFloat(formData.peso) || 0,
       max_apilado: parseInt(formData.max_apilado) || 0,
-      unidades_por_pallet: formData.se_palletiza ? parseInt(formData.unidades_pallet) : null,
-      foto_url: fotoUrl,
-    }]);
+      unidades_pallet: formData.se_palletiza ? (parseInt(formData.unidades_pallet) || 0) : 0,
+    };
 
-    if (error) {
-      setErrors({ form: 'Error al guardar: ' + error.message });
-      setLoading(false);
-    } else {
-      onSave();
+    // 1. Guardar en Supabase (si está configurado)
+    if (supabase) {
+      const { data: existing } = await supabase
+        .from('maestro_sku')
+        .select('id')
+        .eq('sku', skuClean)
+        .eq('nave', formData.nave)
+        .maybeSingle();
+
+      if (existing) {
+        setErrors({ sku: `El SKU ${skuClean} ya existe en ${formData.nave}` });
+        setLoading(false);
+        return;
+      }
+
+      const fotoUrl = await uploadPhoto(skuClean);
+
+      const { error } = await supabase.from('maestro_sku').insert([{
+        ...rowData,
+        unidades_por_pallet: rowData.unidades_pallet || null,
+        foto_url: fotoUrl,
+      }]);
+
+      if (error) {
+        setErrors({ form: 'Error Supabase: ' + error.message });
+        setLoading(false);
+        return;
+      }
     }
+
+    // 2. Agregar fila al Google Sheet
+    const sheetResult = await appendToGoogleSheet(rowData);
+    if (sheetResult.success) {
+      setSheetStatus('ok');
+    } else {
+      setSheetStatus('error');
+      console.warn('Google Sheets sync falló:', sheetResult.error);
+    }
+
+    // Éxito — volver al dashboard después de un breve delay para mostrar el estado
+    setTimeout(() => onSave(), sheetResult.success ? 600 : 1500);
   };
+
+  if (showScanner) {
+    return <BarcodeScanner onDetected={handleScanResult} onClose={() => setShowScanner(false)} />;
+  }
 
   return (
     <div className="min-h-screen bg-[#efefff] pb-24 font-verdana">
-      <Header title="Registro Parasum" />
+      <Header title="Nuevo SKU" />
 
       <form onSubmit={handleSubmit} className="px-4 py-6 max-w-md mx-auto space-y-6">
         {/* ── Datos principales ── */}
@@ -411,7 +432,8 @@ const SKUForm = ({ initialSku, onSave, onCancel }) => {
             <label className="block text-[9px] font-bold text-gray-500 mb-2 uppercase">Nave</label>
             <div className="flex bg-gray-100 p-1 rounded-xl">
               {['PL2', 'PL3'].map((n) => (
-                <button key={n} type="button" onClick={() => handleNaveChange(n)}
+                <button key={n} type="button"
+                  onClick={() => setFormData((prev) => ({ ...prev, nave: n }))}
                   className={`flex-1 py-3 rounded-[10px] text-sm font-bold transition-all ${
                     formData.nave === n ? 'bg-[#0099A8] text-white shadow-md' : 'text-gray-500'
                   }`}>{n}</button>
@@ -419,37 +441,40 @@ const SKUForm = ({ initialSku, onSave, onCancel }) => {
             </div>
           </div>
 
-          {/* Desplegable de SKU filtrado por nave */}
-          <div className="mb-4">
-            <label className="block text-[9px] uppercase tracking-wider font-bold text-gray-500 mb-1">Producto</label>
-            <select
-              value={formData.sku}
-              onChange={handleSkuChange}
-              className={`w-full bg-gray-50 border ${errors.sku ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-200'} text-gray-800 text-base rounded-[12px] focus:ring-2 focus:ring-[#0099A8] focus:border-transparent outline-none py-3 px-4 appearance-none`}
-            >
-              <option value="">— Seleccioná un producto —</option>
-              {skusDisponibles.map((item) => (
-                <option key={item.codigo} value={item.codigo}>
-                  {item.codigo} — [{item.localizador}] {item.descripcion}
-                </option>
-              ))}
-            </select>
-            {errors.sku && <p className="text-red-500 text-[9px] mt-1 font-bold">{errors.sku}</p>}
-          </div>
+          {/* SKU: input libre + botón escáner */}
+          <InputGroup
+            label="Código SKU"
+            id="sku"
+            value={formData.sku}
+            onChange={handleChange}
+            placeholder="Escaneá o escribí el código"
+            icon={Box}
+            error={errors.sku}
+            rightElement={
+              <button type="button" onClick={() => setShowScanner(true)}
+                className="bg-[#0099A8] text-white px-4 rounded-[12px] flex items-center gap-1 active:scale-95 transition-all">
+                <ScanLine size={20} />
+              </button>
+            }
+          />
 
-          {/* Datos auto-completados (solo lectura) */}
-          {formData.descripcion && (
-            <div className="mb-4 bg-gray-100 rounded-[12px] px-4 py-3 space-y-1">
-              <p className="text-[9px] uppercase tracking-wider font-bold text-gray-500 mb-1">Descripción</p>
-              <p className="text-sm text-gray-800 font-medium">{formData.descripcion}</p>
-              {formData.localizador && (
-                <>
-                  <p className="text-[9px] uppercase tracking-wider font-bold text-gray-500 mt-2 mb-1">Localizador</p>
-                  <p className="text-sm text-gray-800 font-bold font-mono">{formData.localizador}</p>
-                </>
-              )}
-            </div>
-          )}
+          {/* Descripción: libre */}
+          <InputGroup
+            label="Descripción"
+            id="descripcion"
+            value={formData.descripcion}
+            onChange={handleChange}
+            placeholder="Nombre / descripción del producto"
+            icon={FileText}
+            error={errors.descripcion}
+          />
+
+          {/* Criterio / Categoría */}
+          <CriterioSelector
+            value={formData.criterio}
+            onChange={(val) => setFormData((prev) => ({ ...prev, criterio: val }))}
+            error={errors.criterio}
+          />
         </Card>
 
         {/* ── Foto del producto ── */}
@@ -461,7 +486,7 @@ const SKUForm = ({ initialSku, onSave, onCancel }) => {
           />
         </Card>
 
-        {/* ── Aviso importante ── */}
+        {/* ── Aviso ── */}
         <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 text-amber-800 text-sm p-4 rounded-xl">
           <AlertCircle size={20} className="flex-shrink-0 mt-0.5" />
           <p className="font-medium">Los datos de peso, dimensiones y apilabilidad máxima figuran en el embalaje del producto.</p>
@@ -479,7 +504,7 @@ const SKUForm = ({ initialSku, onSave, onCancel }) => {
 
         {/* ── Almacenamiento ── */}
         <Card>
-          <InputGroup label="Niveles de Apilado" id="max_apilado" type="number" value={formData.max_apilado} onChange={handleChange} icon={Layers} />
+          <InputGroup label="Niveles de Apilado" id="max_apilado" type="number" value={formData.max_apilado} onChange={handleChange} icon={Layers} error={errors.max_apilado} />
 
           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
             <label className="text-sm font-bold text-gray-700">¿Se palletiza?</label>
@@ -496,6 +521,19 @@ const SKUForm = ({ initialSku, onSave, onCancel }) => {
             </div>
           )}
         </Card>
+
+        {/* ── Estado de sincronización ── */}
+        {sheetStatus === 'ok' && (
+          <div className="flex items-center gap-2 bg-green-50 text-green-700 text-sm font-bold p-4 rounded-xl">
+            <span>✓</span> SKU guardado y sincronizado con Google Sheets
+          </div>
+        )}
+        {sheetStatus === 'error' && (
+          <div className="flex items-center gap-2 bg-yellow-50 text-yellow-700 text-sm font-bold p-4 rounded-xl">
+            <AlertCircle size={18} />
+            SKU guardado en Supabase, pero no se pudo sincronizar con Google Sheets. Se reintentará.
+          </div>
+        )}
 
         {/* ── Error global ── */}
         {errors.form && (
@@ -517,7 +555,7 @@ const SKUForm = ({ initialSku, onSave, onCancel }) => {
   );
 };
 
-// ─── APP PRINCIPAL ───────────────────────────────────────────────────────────
+// ─── APP PRINCIPAL ──────────────────────────────────────────────────────────
 
 export default function App() {
   const [view, setView] = useState('dashboard');
@@ -563,13 +601,21 @@ export default function App() {
           </Card>
         </div>
 
+        {/* Indicador de conexión Google Sheets */}
+        <div className={`flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-xl mb-4 ${
+          GOOGLE_SCRIPT_URL ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-600'
+        }`}>
+          <div className={`w-2 h-2 rounded-full ${GOOGLE_SCRIPT_URL ? 'bg-green-500' : 'bg-yellow-500'}`} />
+          {GOOGLE_SCRIPT_URL ? 'Sincronización con Google Sheets activa' : 'Google Sheets no configurado'}
+        </div>
+
         {/* CTA principal */}
         <button onClick={() => setView('form')}
           className="w-full bg-gradient-to-r from-[#0099A8] to-[#056572] text-white py-8 rounded-[24px] shadow-xl flex items-center justify-center gap-4 active:scale-95 transition-all mb-8">
           <ScanLine size={32} />
           <div className="text-left">
-            <p className="text-xl font-bold">Nuevo Registro</p>
-            <p className="text-xs opacity-80 font-normal">Escaneo o Manual</p>
+            <p className="text-xl font-bold">Nuevo SKU</p>
+            <p className="text-xs opacity-80 font-normal">Escáner o ingreso manual</p>
           </div>
           <ChevronRight className="ml-auto mr-4" />
         </button>
