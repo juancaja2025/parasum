@@ -391,7 +391,14 @@ const SKUForm = ({ initialSku, onSave, onCancel }) => {
       const fotoUrl = await uploadPhoto(skuClean);
 
       const { error } = await supabase.from('maestro_sku').insert([{
-        ...rowData,
+        sku: rowData.sku,
+        descripcion: rowData.descripcion,
+        nave: rowData.nave,
+        largo_cm: rowData.largo_cm,
+        ancho_cm: rowData.ancho_cm,
+        alto_cm: rowData.alto_cm,
+        peso_kg: rowData.peso_kg,
+        max_apilado: rowData.max_apilado,
         unidades_por_pallet: rowData.unidades_pallet || null,
         foto_url: fotoUrl,
       }]);
